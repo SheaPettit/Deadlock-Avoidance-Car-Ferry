@@ -1,32 +1,47 @@
 import java.util.concurrent.ThreadLocalRandom;
 public class Car implements Runnable {
-  private static String[] questions = {"What is the meaning of life?", "Who is Java?", "What is your purpose", "Why not?", "What is 1 + 1?", "What is a linux?", "Can you recreate a computer from scratch?"};
   private static int count = 0;
-  private int num;
-  private Teacher teacher;
-  private String previousAnswer;
-  private String currentQuestion;
-  public Student(Teacher teach){
-    teacher = teach;
-    num = ++count;
+  private int id;
+  private CarLocation location;
+  private Ferry ferry;
+
+  public Car(Ferry ferry) {
+    this.ferry = ferry;
+    location = CarLocation.MAINLAND;
+    id = count++;
   }
-  private void QuestionStart(String question) {
-    currentQuestion = question;
-    teacher.AnswerStart(this, question);
-  }
-  public String QuestionEnd(String answer) {
-    System.out.println("Teacher answer to Student " + num + ": " + answer);
-    previousAnswer = answer;
-    return answer;
-  }
-  public String Speak(){
-    System.out.println("Student " + num + " asks: " + currentQuestion);
-    return currentQuestion;
-  }
+
   public void run() {
     ThreadLocalRandom rand = ThreadLocalRandom.current();
-    for(int i = 0; i < 100; i++) {
-      QuestionStart(questions[rand.nextInt(questions.length)]);
+    while(location != CarLocation.ERROR){
+      try {
+        Thread.sleep(rand.nextInt(1000,15001));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+      location = ferry.requestRide(location);
+      printAtSea();
+      location = ferry.endRide(location);
+      printAtLocation();
     }
+    if(location == CarLocation.ERROR){
+      System.err.println("Error has occured");
+      System.exit(1);
+    }
+  }
+
+  private void printAtSea() {
+    if(location == CarLocation.AT_SEA)
+      System.out.println("Car " + id + " is at sea");
+  }
+
+  private void printAtLocation() {
+    if(location == CarLocation.AT_SEA || location == CarLocation.ERROR)
+      return;
+    System.out.print("Car " + id + " is at ");
+    if(location == CarLocation.MAINLAND)
+      System.out.println("the Mainland");
+    if(location == CarLocation.ISLAND)
+      System.out.println("the Island");
   }
 }
